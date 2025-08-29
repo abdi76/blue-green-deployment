@@ -1,0 +1,47 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: blue-green-deployment-rules
+  namespace: blue-green-demo
+  labels:
+    app: k8s-app
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: blue-green-deployment.rules
+    rules:
+    - alert: BlueGreenDeploymentHighErrorRate
+      expr: |
+        (
+          rate(http_requests_total{job="k8s-app", status=~"5.."}[5m]) /
+          rate(http_requests_total{job="k8s-app"}[5m])
+        ) * 100 > 5
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High error rate detected in Blue-Green deployment"
+        description: "Error rate is {{ $value }}% for {{ $labels.version }} version"
+    
+    - alert: BlueGreenDeploymentHighLatency
+      expr: |
+        histogram_quantile(0.95, 
+          rate(http_request_duration_seconds_bucket{job="k8s-app"}[5m])
+        ) > 1
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High latency detected in Blue-Green deployment"
+        description: "95th percentile latency is {{ $value }}s for {{ $labels.version }} version"
+    
+    - alert: BlueGreenDeploymentPodDown
+      expr: |
+        up{job="k8s-app"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod is down in Blue-Green deployment"
+        description: "Pod {{ $labels.instance }} ({{ $labels.version }} version) has been down for more than 1 minute"
