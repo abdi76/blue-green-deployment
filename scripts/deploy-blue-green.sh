@@ -15,7 +15,7 @@ echo "Deploying $VERSION version with image tag: $IMAGE_TAG"
 
 # Update image tag in deployment
 DEPLOYMENT_FILE="applications/k8s-app/$VERSION/deployment.yaml"
-sed -i.bak "s|image: .*|image: your-dockerhub-username/k8s-cicd-app:$IMAGE_TAG|g" $DEPLOYMENT_FILE
+sed -i.bak "s|image: .*|image: abdi76/k8s-cicd-app:$IMAGE_TAG|g" $DEPLOYMENT_FILE
 
 # Update timestamp annotation for rolling update
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
